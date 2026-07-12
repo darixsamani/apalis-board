@@ -1,0 +1,48 @@
+[package]
+name        = "salvo-example"
+version     = "0.1.0"
+edition.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "apalis-board + Salvo example (mirrors axum-email-service)"
+
+[[bin]]
+name = "salvo-example"
+path = "src/main.rs"
+
+[dependencies]
+
+# ── apalis runtime ────────────────────────────────────────────────────────────
+apalis-core = { workspace = true, features = ["serde"] }
+apalis = { workspace = true, features = ["limit", "retry", "tracing"] }
+apalis-sqlite.workspace = true
+# ── apalis-board with the new Salvo feature ───────────────────────────────────
+#
+# Point at the workspace path while developing locally.
+# Change to `version = "1.0.0-rc.4"` after the PR is merged and released.
+apalis-board = { path = "../../", features = ["salvo", "ui", "events"] }
+
+# ── Salvo web framework ───────────────────────────────────────────────────────
+#   oapi         → #[handler] macro + OpenAPI support
+#   sse          → Server-Sent Events for /events endpoint
+#   tower-compat → lets you wrap tower middleware (e.g. CORS) in Salvo hoops
+salvo = { version = "0.92", features = ["sse", "tower-compat"] }
+
+# ── Async runtime ─────────────────────────────────────────────────────────────
+tokio = { version = "1", features = ["full"] }
+
+# ── Tracing ───────────────────────────────────────────────────────────────────
+tracing             = "0.1"
+tracing-subscriber  = { workspace = true , features = ["env-filter"] }
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+serde       = { version = "1", features = ["derive"] }
+serde_json  = "1"
+anyhow      = "1"
+# sqlx        = { version = "0.8", features = ["sqlite", "runtime-tokio"] }
+
+# ── SMTP (optional – only needed for the email-sending logic) ─────────────────
+# lettre = { version = "0.11", features = ["tokio1-native-tls"] }
+
+[lints]
+workspace = true
