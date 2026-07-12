@@ -35,7 +35,12 @@ pub struct ApiBuilder<R> {
 impl<R> ApiBuilder<R> {
     /// Create a new ApiBuilder with default settings
     pub fn new(router: R) -> Self {
-        Self { router, root: true, #[cfg(feature = "sse")] broadcaster: None}
+        Self {
+            router,
+            root: true,
+            #[cfg(feature = "sse")]
+            broadcaster: None,
+        }
     }
     /// Create a new ApiBuilder with a custom scope
     /// If `register_root` is true, the root routes (/queues, /tasks, /workers, /overview)
@@ -55,6 +60,7 @@ impl<R> ApiBuilder<R> {
     }
     /// Attaches a tracing broadcaster, enabling the `/events` SSE endpoint.
     #[cfg(feature = "sse")]
+    #[must_use]
     pub fn with_broadcaster(
         mut self,
         broadcaster: Arc<Mutex<crate::sse::TracingBroadcaster>>,

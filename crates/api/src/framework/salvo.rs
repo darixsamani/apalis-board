@@ -1,5 +1,3 @@
-use std::{str::FromStr, sync::Arc};
-use std::marker::PhantomData;
 use apalis_core::{
     backend::{
         Backend, BackendExt, FetchById, Filter, ListAllTasks, ListQueues, ListTasks, ListWorkers,
@@ -9,21 +7,24 @@ use apalis_core::{
 };
 use salvo::{affix_state, prelude::*};
 use serde::{Serialize, de::DeserializeOwned};
+use std::marker::PhantomData;
+use std::{str::FromStr, sync::Arc};
 use tokio::sync::RwLock;
 
 use crate::framework::{ApiBuilder, RegisterRoute};
 
-
-/// State to inject in Depot during the request in order to access to Api Backend 
+/// State to inject in Depot during the request in order to access to Api Backend
 #[derive(Debug)]
 pub struct ApiState<B> {
-    /// field to store state backend 
+    /// field to store state backend
     pub backend: Arc<RwLock<B>>,
 }
 
 impl<B> Clone for ApiState<B> {
     fn clone(&self) -> Self {
-        Self { backend: self.backend.clone() }
+        Self {
+            backend: self.backend.clone(),
+        }
     }
 }
 
@@ -45,10 +46,7 @@ where
     B: ListQueues + Send + Sync + 'static,
     B::Error: std::error::Error,
 {
-    async fn handle(
-        &self,
-        depot: &mut Depot,
-    ) -> Result<Json<Vec<QueueInfo>>, StatusError> {
+    async fn handle(&self, depot: &mut Depot) -> Result<Json<Vec<QueueInfo>>, StatusError> {
         let state = depot
             .obtain::<ApiState<B>>()
             .map_err(|_| StatusError::internal_server_error())?;
@@ -64,8 +62,6 @@ where
         Ok(Json(queues))
     }
 }
-
-
 
 struct GetAllTasks<B>(PhantomData<fn() -> B>);
 
@@ -91,26 +87,23 @@ where
         depot: &mut Depot,
     ) -> Result<Json<Vec<Task<B::Compact, B::Context, B::IdType>>>, StatusError> {
         let state = depot
-        .obtain::<ApiState<B>>()
-        .map_err(|_| StatusError::internal_server_error())?;
-    let filter = req
-        .parse_queries::<Filter>()
-        .map_err(|err| StatusError::bad_request().brief(err.to_string()))?;
+            .obtain::<ApiState<B>>()
+            .map_err(|_| StatusError::internal_server_error())?;
+        let filter = req
+            .parse_queries::<Filter>()
+            .map_err(|err| StatusError::bad_request().brief(err.to_string()))?;
 
-    let tasks = state
-        .backend
-        .read()
-        .await
-        .list_all_tasks(&filter)
-        .await
-        .map_err(internal_error)?;
+        let tasks = state
+            .backend
+            .read()
+            .await
+            .list_all_tasks(&filter)
+            .await
+            .map_err(internal_error)?;
 
-    Ok(Json(tasks))
+        Ok(Json(tasks))
     }
 }
-
-
-
 
 struct GetAllWorkers<B>(PhantomData<fn() -> B>);
 
@@ -120,34 +113,28 @@ impl<B> GetAllWorkers<B> {
     }
 }
 
-
 #[handler]
 impl<B> GetAllWorkers<B>
 where
     B: ListWorkers + Send + Sync + 'static,
     B::Error: std::error::Error,
 {
-    async fn handle(
-        &self,
-        depot: &mut Depot,
-    ) -> Result<Json<Vec<RunningWorker>>, StatusError> {
+    async fn handle(&self, depot: &mut Depot) -> Result<Json<Vec<RunningWorker>>, StatusError> {
         let state = depot
-        .obtain::<ApiState<B>>()
-        .map_err(|_| StatusError::internal_server_error())?;
+            .obtain::<ApiState<B>>()
+            .map_err(|_| StatusError::internal_server_error())?;
 
-    let workers = state
-        .backend
-        .read()
-        .await
-        .list_all_workers()
-        .await
-        .map_err(internal_error)?;
+        let workers = state
+            .backend
+            .read()
+            .await
+            .list_all_workers()
+            .await
+            .map_err(internal_error)?;
 
-    Ok(Json(workers))
+        Ok(Json(workers))
     }
 }
-
-
 
 struct Overview<B>(PhantomData<fn() -> B>);
 
@@ -157,20 +144,16 @@ impl<B> Overview<B> {
     }
 }
 
-
 #[handler]
 impl<B> Overview<B>
 where
     B: Metrics + Send + Sync + 'static,
     B::Error: std::error::Error,
 {
-    async fn handle(
-        &self,
-        depot: &mut Depot,
-    ) ->  Result<Json<Vec<Statistic>>, StatusError> {
+    async fn handle(&self, depot: &mut Depot) -> Result<Json<Vec<Statistic>>, StatusError> {
         let state = depot
-        .obtain::<ApiState<B>>()
-        .map_err(|_| StatusError::internal_server_error())?;
+            .obtain::<ApiState<B>>()
+            .map_err(|_| StatusError::internal_server_error())?;
 
         let stats = state
             .backend
@@ -184,17 +167,17 @@ where
     }
 }
 
-
-
-
-struct GetTasks<B, T, Compact>(PhantomData<fn() -> B>, PhantomData<fn() -> T>, PhantomData<fn() -> Compact>);
+struct GetTasks<B, T, Compact>(
+    PhantomData<fn() -> B>,
+    PhantomData<fn() -> T>,
+    PhantomData<fn() -> Compact>,
+);
 
 impl<B, T, Compact> GetTasks<B, T, Compact> {
     fn new() -> Self {
         Self(PhantomData, PhantomData, PhantomData)
     }
 }
-
 
 #[handler]
 impl<B, T, Compact> GetTasks<B, T, Compact>
@@ -211,10 +194,10 @@ where
         &self,
         req: &mut Request,
         depot: &mut Depot,
-    ) ->  Result<Json<Vec<Task<T, B::Context, B::IdType>>>, StatusError> {
+    ) -> Result<Json<Vec<Task<T, B::Context, B::IdType>>>, StatusError> {
         let state = depot
-        .obtain::<ApiState<B>>()
-        .map_err(|_| StatusError::internal_server_error())?;
+            .obtain::<ApiState<B>>()
+            .map_err(|_| StatusError::internal_server_error())?;
         let filter = req
             .parse_queries::<Filter>()
             .map_err(|err| StatusError::bad_request().brief(err.to_string()))?;
@@ -228,10 +211,8 @@ where
             .map_err(internal_error)?;
 
         Ok(Json(tasks))
-        }
+    }
 }
-
-
 
 struct StatsByQueue<B>(PhantomData<fn() -> B>);
 
@@ -241,34 +222,28 @@ impl<B> StatsByQueue<B> {
     }
 }
 
-
 #[handler]
 impl<B> StatsByQueue<B>
 where
     B: Metrics + BackendExt + Send + Sync + 'static,
     B::Error: std::error::Error,
 {
-    async fn handle(
-        &self,
-        depot: &mut Depot,
-    ) ->  Result<Json<Vec<Statistic>>, StatusError> {
+    async fn handle(&self, depot: &mut Depot) -> Result<Json<Vec<Statistic>>, StatusError> {
         let state = depot
-        .obtain::<ApiState<B>>()
-        .map_err(|_| StatusError::internal_server_error())?;
+            .obtain::<ApiState<B>>()
+            .map_err(|_| StatusError::internal_server_error())?;
 
-    let stats = state
-        .backend
-        .read()
-        .await
-        .fetch_by_queue()
-        .await
-        .map_err(internal_error)?;
+        let stats = state
+            .backend
+            .read()
+            .await
+            .fetch_by_queue()
+            .await
+            .map_err(internal_error)?;
 
-    Ok(Json(stats))
+        Ok(Json(stats))
     }
 }
-
-
 
 struct GetWorkers<B>(PhantomData<fn() -> B>);
 
@@ -278,20 +253,16 @@ impl<B> GetWorkers<B> {
     }
 }
 
-
 #[handler]
 impl<B> GetWorkers<B>
 where
     B: ListWorkers + BackendExt + Send + Sync + 'static,
     B::Error: std::error::Error,
 {
-    async fn handle(
-        &self,
-        depot: &mut Depot,
-    ) -> Result<Json<Vec<RunningWorker>>, StatusError> {
+    async fn handle(&self, depot: &mut Depot) -> Result<Json<Vec<RunningWorker>>, StatusError> {
         let state = depot
-        .obtain::<ApiState<B>>()
-        .map_err(|_| StatusError::internal_server_error())?;
+            .obtain::<ApiState<B>>()
+            .map_err(|_| StatusError::internal_server_error())?;
 
         let workers = state
             .backend
@@ -305,16 +276,17 @@ where
     }
 }
 
-
-
-struct PushTask<B, T, Compact>(PhantomData<fn() -> B>, PhantomData<fn() -> T>, PhantomData<fn() -> Compact>);
+struct PushTask<B, T, Compact>(
+    PhantomData<fn() -> B>,
+    PhantomData<fn() -> T>,
+    PhantomData<fn() -> Compact>,
+);
 
 impl<B, T, Compact> PushTask<B, T, Compact> {
     fn new() -> Self {
         Self(PhantomData, PhantomData, PhantomData)
     }
 }
-
 
 #[handler]
 impl<B, T, Compact> PushTask<B, T, Compact>
@@ -328,14 +300,10 @@ where
     Compact: Send + 'static,
     <<B as BackendExt>::Codec as Codec<T>>::Error: std::error::Error,
 {
-    async fn handle(
-        &self,
-        req: &mut Request,
-        depot: &mut Depot,
-    ) -> Result<Json<()>, StatusError> {
+    async fn handle(&self, req: &mut Request, depot: &mut Depot) -> Result<Json<()>, StatusError> {
         let state = depot
-        .obtain::<ApiState<B>>()
-        .map_err(|_| StatusError::internal_server_error())?;
+            .obtain::<ApiState<B>>()
+            .map_err(|_| StatusError::internal_server_error())?;
         let task = req
             .parse_body::<T>()
             .await
@@ -357,7 +325,6 @@ impl<B, T> GetTaskById<B, T> {
     }
 }
 
-
 #[handler]
 impl<B, T> GetTaskById<B, T>
 where
@@ -375,8 +342,8 @@ where
         depot: &mut Depot,
     ) -> Result<Json<Task<T, B::Context, B::IdType>>, StatusError> {
         let state = depot
-        .obtain::<ApiState<B>>()
-        .map_err(|_| StatusError::internal_server_error())?;
+            .obtain::<ApiState<B>>()
+            .map_err(|_| StatusError::internal_server_error())?;
         let task_id = req
             .param::<String>("task_id")
             .ok_or_else(|| StatusError::bad_request().brief("missing task_id"))?;
@@ -391,7 +358,6 @@ where
         }
     }
 }
-
 
 impl<B, T, Compact> RegisterRoute<B, T> for ApiBuilder<Router>
 where
@@ -414,20 +380,21 @@ where
     fn register(mut self, backend: B) -> Self {
         let queue = backend.get_queue();
         let backend = Arc::new(RwLock::new(backend));
-        let state = ApiState { backend: backend.clone() };
-
+        let state = ApiState {
+            backend: backend.clone(),
+        };
 
         if self.root {
             let mut router = self
                 .router
-               .hoop(affix_state::inject(state.clone()))
+                .hoop(affix_state::inject(state.clone()))
                 .hoop(affix_state::inject(queue.clone()))
                 .push(Router::with_path("/queues").get(FetchQueues::<B>::new()))
                 .push(Router::with_path("/tasks").get(GetAllTasks::<B>::new()))
                 .push(Router::with_path("/workers").get(GetAllWorkers::<B>::new()))
                 .push(Router::with_path("/overview").get(Overview::<B>::new()));
 
-             #[cfg(feature = "sse")]
+            #[cfg(feature = "sse")]
             {
                 if let Some(broadcaster) = self.broadcaster.clone() {
                     router = router
@@ -457,8 +424,6 @@ where
     }
 }
 
- 
-
 /// module UI for the bashboard
 #[cfg(feature = "ui")]
 pub mod ui {
@@ -469,98 +434,92 @@ pub mod ui {
     #[derive(Debug)]
     pub struct ServeApp;
 
-
-    impl  ServeApp {
+    impl ServeApp {
         /// Creates a new instance of `ServeApp`.
-        pub fn new() -> Self{
+        pub fn new() -> Self {
             Self
         }
         /// associate methode to return the router of andpoint dasboard
-        pub fn router () -> Router {
+        pub fn router() -> Router {
             Router::with_path("{*path}").get(ServeUI::new())
         }
-    } 
+    }
 
     #[handler]
     impl ServeUI {
+        async fn handle(&self, req: &mut Request, res: &mut Response) -> Result<(), StatusError> {
+            let path = req.uri().path();
+            let mut file = Self::get_file(path);
 
-        async fn handle(
-        &self,
-        req: &mut Request,
-        res: &mut Response,
-    ) -> Result<(), StatusError> {
-        let path = req.uri().path();
-        let mut file = Self::get_file(path);
+            // If no matching file, fall back to index.html
+            if file.is_none() {
+                file = Self::get_file("index.html");
+            }
 
-        // If no matching file, fall back to index.html
-        if file.is_none() {
-            file = Self::get_file("index.html");
-        }
+            match file {
+                Some(file) => {
+                    let path_str = file.path().to_str().unwrap_or("");
+                    let content_type = Self::content_type(path_str);
+                    res.add_header("Content-Type", content_type, true)
+                        .expect("Failed to add header Content-Type");
 
-        match file {
-            Some(file) => {
-                let path_str = file.path().to_str().unwrap_or("");
-                let content_type = Self::content_type(path_str);
-                res.add_header("Content-Type", content_type, true).expect("Failed to add header Content-Type");
+                    if let Some(cache) = Self::cache_control(path_str) {
+                        res.add_header("Cache-Control", cache, true)
+                            .expect("fialed to add header Cache-Control");
+                    }
 
-                if let Some(cache) = Self::cache_control(path_str) {
-                    res.add_header("Cache-Control", cache, true).expect("fialed to add header Cache-Control");
+                    res.body(file.contents().to_vec());
                 }
+                None => {
+                    res.status_code(StatusCode::NOT_FOUND);
+                }
+            }
 
-                res.body(file.contents().to_vec());
-            }
-            None => {
-                res.status_code(StatusCode::NOT_FOUND);
-            }
+            Ok(())
         }
 
-        Ok(())
+        // impl Service<Request<Body>> for ServeUI {
+        //     type Response = Response<Body>;
+        //     type Error = Infallible;
+        //     type Future = std::future::Ready<Result<Self::Response, Self::Error>>;
+
+        //     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        //         Poll::Ready(Ok(()))
+        //     }
+
+        //     fn call(&mut self, req: Request<Body>) -> Self::Future {
+        //         let path = req.uri().path();
+        //         let mut file = Self::get_file(path);
+
+        //         // If no matching file, fall back to index.html
+        //         if file.is_none() {
+        //             file = Self::get_file("index.html");
+        //         }
+
+        //         let response = match file {
+        //             Some(file) => {
+        //                 let path_str = file.path().to_str().unwrap_or("");
+        //                 let content_type = Self::content_type(path_str);
+        //                 let mut builder = Response::builder()
+        //                     .status(StatusCode::OK)
+        //                     .header("Content-Type", content_type);
+
+        //                 if let Some(cache) = Self::cache_control(path_str) {
+        //                     builder = builder.header("Cache-Control", cache);
+        //                 }
+
+        //                 builder.body(file.contents().to_vec().into()).unwrap()
+        //             }
+        //             None => Response::builder()
+        //                 .status(StatusCode::NOT_FOUND)
+        //                 .body(Vec::new().into())
+        //                 .unwrap(),
+        //         };
+
+        //         std::future::ready(Ok(response))
+        //     }
+        // }
     }
-
-
-
-    // impl Service<Request<Body>> for ServeUI {
-    //     type Response = Response<Body>;
-    //     type Error = Infallible;
-    //     type Future = std::future::Ready<Result<Self::Response, Self::Error>>;
-
-    //     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-    //         Poll::Ready(Ok(()))
-    //     }
-
-    //     fn call(&mut self, req: Request<Body>) -> Self::Future {
-    //         let path = req.uri().path();
-    //         let mut file = Self::get_file(path);
-
-    //         // If no matching file, fall back to index.html
-    //         if file.is_none() {
-    //             file = Self::get_file("index.html");
-    //         }
-
-    //         let response = match file {
-    //             Some(file) => {
-    //                 let path_str = file.path().to_str().unwrap_or("");
-    //                 let content_type = Self::content_type(path_str);
-    //                 let mut builder = Response::builder()
-    //                     .status(StatusCode::OK)
-    //                     .header("Content-Type", content_type);
-
-    //                 if let Some(cache) = Self::cache_control(path_str) {
-    //                     builder = builder.header("Cache-Control", cache);
-    //                 }
-
-    //                 builder.body(file.contents().to_vec().into()).unwrap()
-    //             }
-    //             None => Response::builder()
-    //                 .status(StatusCode::NOT_FOUND)
-    //                 .body(Vec::new().into())
-    //                 .unwrap(),
-    //         };
-
-    //         std::future::ready(Ok(response))
-    //     }
-    // }
-}
 }
 
 /// module Sever Send Event

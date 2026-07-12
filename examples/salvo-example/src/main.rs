@@ -23,18 +23,18 @@
 //! curl -N http://localhost:5800/api/v1/events
 //! ```
 
-use std::time::Duration;
 use apalis::prelude::*;
+use apalis_board::salvo::framework::salvo::ui::ServeApp;
 use apalis_board::salvo::{
     framework::{ApiBuilder, RegisterRoute},
     sse::{TracingBroadcaster, TracingSubscriber},
 };
-use salvo::prelude::*;
-use apalis_board::salvo::framework::salvo::ui::ServeApp;
 use apalis_sqlite::{SqlitePool, SqliteStorage};
+use salvo::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 use tracing::info;
-use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
+use tracing_subscriber::{EnvFilter, Layer, layer::SubscriberExt, util::SubscriberInitExt};
 
 // ─── Job type ─────────────────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ async fn main() -> anyhow::Result<()> {
         loop {
             n += 1;
             let job = Email {
-                to:      format!("user{}@example.com", n),
+                to: format!("user{}@example.com", n),
                 subject: format!("Newsletter #{}", n),
             };
             if let Err(e) = producer.push(job).await {
@@ -136,11 +136,11 @@ async fn main() -> anyhow::Result<()> {
 
     // ── 7. Run both the Salvo server and the apalis monitor concurrently ───────
     let monitor = Monitor::new().register(move |index| {
-         WorkerBuilder::new(format!("email-worker-{index}"))
-        .backend(email_storage.clone())
-        .enable_tracing()
-        .build(send_email)
-});
+        WorkerBuilder::new(format!("email-worker-{index}"))
+            .backend(email_storage.clone())
+            .enable_tracing()
+            .build(send_email)
+    });
 
     info!("🚀 apalis-board (Salvo) → http://0.0.0.0:5800");
 
