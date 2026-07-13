@@ -10,18 +10,6 @@
 //! cargo run --package salvo-example
 //! # Open: http://localhost:5800
 //! ```
-//!
-//! ## Testing the API with curl
-//!
-//! ```shell
-//! # List all workers
-//! curl http://localhost:5800/api/v1/workers
-//!
-//!
-//!
-//! # Stream live task logs (Ctrl-C to stop)
-//! curl -N http://localhost:5800/api/v1/events
-//! ```
 
 use apalis::prelude::*;
 use apalis_board::salvo::framework::salvo::ui::ServeApp;
