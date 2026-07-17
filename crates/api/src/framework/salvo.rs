@@ -396,8 +396,7 @@ where
 
             #[cfg(feature = "sse")]
             {
-                    router = router
-                        .push(Router::with_path("/events").get(sse::new_client));
+                router = router.push(Router::with_path("/events").get(sse::new_client));
             }
 
             self.router = router;

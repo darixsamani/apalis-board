@@ -29,10 +29,7 @@ pub struct ApiBuilder<R> {
 impl<R> ApiBuilder<R> {
     /// Create a new ApiBuilder with default settings
     pub fn new(router: R) -> Self {
-        Self {
-            router,
-            root: true,
-        }
+        Self { router, root: true }
     }
     /// Create a new ApiBuilder with a custom scope
     /// If `register_root` is true, the root routes (/queues, /tasks, /workers, /overview)
