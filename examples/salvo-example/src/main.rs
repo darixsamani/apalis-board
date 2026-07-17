@@ -89,7 +89,6 @@ async fn main() -> anyhow::Result<()> {
 
     // ── 5. apalis-board API router (Salvo) ────────────────────────────────────
     let api_router = ApiBuilder::new(Router::new())
-        .with_broadcaster(broadcaster.clone())
         .register(email_storage.clone())
         .build();
 
@@ -99,6 +98,7 @@ async fn main() -> anyhow::Result<()> {
     //   /api/v1/**   → board REST API
     //   /**          → embedded board UI (SPA)
     let app = Router::new()
+        .hoop(affix_state::inject(broadcaster))
         .push(Router::with_path("api/v1").push(api_router))
         .push(ServeApp::router());
 
