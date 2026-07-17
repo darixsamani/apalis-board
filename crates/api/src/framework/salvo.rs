@@ -396,11 +396,8 @@ where
 
             #[cfg(feature = "sse")]
             {
-                if let Some(broadcaster) = self.broadcaster.clone() {
                     router = router
-                        .hoop(affix_state::inject(broadcaster))
                         .push(Router::with_path("/events").get(sse::new_client));
-                }
             }
 
             self.router = router;
@@ -418,8 +415,6 @@ where
         Self {
             router: self.router.push(queue_router),
             root: false,
-            #[cfg(feature = "sse")]
-            broadcaster: self.broadcaster,
         }
     }
 }
@@ -439,7 +434,7 @@ pub mod ui {
         pub fn new() -> Self {
             Self
         }
-        /// associate methode to return the router of andpoint dasboard
+        /// associate methode to return the router of endpoint dashboard
         pub fn router() -> Router {
             Router::with_path("{*path}").get(ServeUI::new())
         }
@@ -495,7 +490,7 @@ pub mod sse {
 
     use crate::sse::TracingBroadcaster;
 
-    /// handle fo endpoint /events
+    /// handle for endpoint /events
     #[handler]
     pub async fn new_client(depot: &mut Depot, res: &mut Response) {
         let broadcaster = match depot.obtain::<Arc<Mutex<TracingBroadcaster>>>() {
