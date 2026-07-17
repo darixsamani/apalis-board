@@ -257,8 +257,6 @@ where
         Self {
             router: scope,
             root: false,
-            #[cfg(feature = "sse")]
-            broadcaster: self.broadcaster,
         }
     }
 }
