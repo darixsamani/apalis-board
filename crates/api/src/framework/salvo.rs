@@ -475,7 +475,7 @@ pub mod ui {
 }
 
 /// module Sever Send Event
-/// enable endoint /events
+/// enable endpoint /events
 #[cfg(feature = "sse")]
 pub mod sse {
     use std::{
@@ -508,7 +508,7 @@ pub mod sse {
                 let entry = entry?;
                 // NOTE: serializing manually here — see caveat below on SseEvent's JSON API.
                 let json = serde_json::to_string(&entry).unwrap_or_default();
-                Ok(SseEvent::default().text(json))
+                Ok(SseEvent::default().json(json).expect("Failed to parse SSE event to JSON"))
             });
 
         SseKeepAlive::new(stream).stream(res);
